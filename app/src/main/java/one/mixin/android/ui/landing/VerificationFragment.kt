@@ -218,12 +218,14 @@ class VerificationFragment : BaseFragment() {
                 Session.storePinToken(key)
 
                 verification_keyboard.animate().translationY(300f).start()
-                mobileViewModel.insertUser(r.data!!.toUser())
                 MixinApplication.get().onlining.set(true)
                 if (account.full_name?.isBlank()!!) {
+                    mobileViewModel.insertUser(r.data!!.toUser())
                     InitializeActivity.showSetupName(context!!)
                 } else {
-                    InitializeActivity.showLoading(context!!)
+                    // InitializeActivity.showLoading(context!!)
+                    // Todo
+                     RestoreActivity.show(context!!)
                 }
                 activity?.finish()
             }, { t: Throwable ->
