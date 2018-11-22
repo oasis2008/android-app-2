@@ -48,6 +48,7 @@ import one.mixin.android.ui.conversation.link.LinkBottomSheetDialogFragment
 import one.mixin.android.ui.landing.InitializeActivity
 import one.mixin.android.ui.landing.LandingActivity
 import one.mixin.android.ui.landing.LoadingFragment
+import one.mixin.android.ui.landing.RestoreActivity
 import one.mixin.android.ui.search.SearchFragment
 import one.mixin.android.util.BiometricUtil
 import one.mixin.android.util.ErrorHandler
@@ -88,6 +89,12 @@ class MainActivity : BlazeBaseActivity() {
 
         if (!Session.checkToken()) run {
             startActivity(Intent(this, LandingActivity::class.java))
+            finish()
+            return
+        }
+
+        if (defaultSharedPreferences.getBoolean(Constants.Account.PREF_RESTORE, false)) {
+            RestoreActivity.show(this)
             finish()
             return
         }
