@@ -36,6 +36,7 @@ import one.mixin.android.crypto.rsaDecrypt
 import one.mixin.android.extension.alert
 import one.mixin.android.extension.displayHeight
 import one.mixin.android.extension.generateQRCode
+import one.mixin.android.extension.isGooglePlayServicesAvailable
 import one.mixin.android.extension.saveQRCode
 import one.mixin.android.extension.vibrate
 import one.mixin.android.job.MixinJobManager
@@ -222,10 +223,11 @@ class VerificationFragment : BaseFragment() {
                 if (account.full_name?.isBlank()!!) {
                     mobileViewModel.insertUser(r.data!!.toUser())
                     InitializeActivity.showSetupName(context!!)
-                } else {
-                    // InitializeActivity.showLoading(context!!)
+                } else if (requireContext().isGooglePlayServicesAvailable()) {
                     // Todo
-                     RestoreActivity.show(context!!)
+                    RestoreActivity.show(context!!)
+                } else {
+                    InitializeActivity.showLoading(context!!)
                 }
                 activity?.finish()
             }, { t: Throwable ->

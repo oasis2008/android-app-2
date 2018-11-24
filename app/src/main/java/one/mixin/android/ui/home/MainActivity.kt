@@ -28,7 +28,9 @@ import one.mixin.android.db.insertConversation
 import one.mixin.android.di.type.DatabaseCategory
 import one.mixin.android.di.type.DatabaseCategoryEnum
 import one.mixin.android.extension.defaultSharedPreferences
+import one.mixin.android.extension.isGooglePlayServicesAvailable
 import one.mixin.android.extension.putLong
+import one.mixin.android.job.BackupJob
 import one.mixin.android.job.MixinJobManager
 import one.mixin.android.job.RefreshAccountJob
 import one.mixin.android.job.RefreshAssetsJob
@@ -93,7 +95,7 @@ class MainActivity : BlazeBaseActivity() {
             return
         }
 
-        if (defaultSharedPreferences.getBoolean(Constants.Account.PREF_RESTORE, false)) {
+        if (isGooglePlayServicesAvailable() && defaultSharedPreferences.getBoolean(Constants.Account.PREF_RESTORE, false)) {
             RestoreActivity.show(this)
             finish()
             return
@@ -128,6 +130,7 @@ class MainActivity : BlazeBaseActivity() {
         jobManager.addJobInBackground(RefreshContactJob())
         jobManager.addJobInBackground(RefreshAssetsJob())
         jobManager.addJobInBackground(RefreshStickerAlbumJob())
+        jobManager.addJobInBackground(BackupJob())
 
         getSystemService<NotificationManager>()?.cancelAll()
 
