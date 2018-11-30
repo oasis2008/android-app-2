@@ -34,7 +34,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-class GenerateAvatarWorker(context: Context, parameters: WorkerParameters) : Worker(context, parameters) {
+class GenerateAvatarWorker(context: Context, parameters: WorkerParameters) : BaseWork(context, parameters) {
     companion object {
         const val GROUP_ID = "group_id"
     }
@@ -49,49 +49,44 @@ class GenerateAvatarWorker(context: Context, parameters: WorkerParameters) : Wor
 
     private val size = 256
 
-    override fun doWork(): Result {
-        AndroidWorkerInjector.inject(this)
+    override fun onRun(): Result {
         val groupId = inputData.getString(GROUP_ID) ?: return Result.FAILURE
-        return try {
-            val users = mutableListOf<User>()
-            texts = ArrayMap()
-            users.addAll(participantDao.getParticipantsAvatar(groupId))
-            val sb = StringBuilder()
-            for (u in users) {
-                sb.append(u.avatarUrl).append("-")
-            }
-            sb.append(groupId)
-            val name = sb.toString().md5()
-            val f = applicationContext.getGroupAvatarPath(name, false)
-            val icon = conversationDao.getGroupIconUrl(groupId)
-            if (f.exists()) {
-                if (f.absolutePath != name) {
-                    conversationDao.updateGroupIconUrl(groupId, f.absolutePath)
-                }
-                return Result.SUCCESS
-            }
-
-            val result = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-            val c = Canvas(result)
-            val bitmaps = mutableListOf<Bitmap>()
-            try {
-                getBitmaps(bitmaps, users)
-                drawInternal(c, bitmaps)
-            } catch (e: Exception) {
-                throw LocalJobException()
-            }
-            result.saveGroupAvatar(applicationContext, name)
-            if (icon != null && icon != f.absolutePath) {
-                try {
-                    File(icon).delete()
-                } catch (e: Exception) {
-                }
-            }
-            conversationDao.updateGroupIconUrl(groupId, f.absolutePath)
-            Result.SUCCESS
-        } catch (e: Exception) {
-            Result.FAILURE
+        val users = mutableListOf<User>()
+        texts = ArrayMap()
+        users.addAll(participantDao.getParticipantsAvatar(groupId))
+        val sb = StringBuilder()
+        for (u in users) {
+            sb.append(u.avatarUrl).append("-")
         }
+        sb.append(groupId)
+        val name = sb.toString().md5()
+        val f = applicationContext.getGroupAvatarPath(name, false)
+        val icon = conversationDao.getGroupIconUrl(groupId)
+        if (f.exists()) {
+            if (f.absolutePath != name) {
+                conversationDao.updateGroupIconUrl(groupId, f.absolutePath)
+            }
+            return Result.SUCCESS
+        }
+
+        val result = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val c = Canvas(result)
+        val bitmaps = mutableListOf<Bitmap>()
+        try {
+            getBitmaps(bitmaps, users)
+            drawInternal(c, bitmaps)
+        } catch (e: Exception) {
+            throw LocalJobException()
+        }
+        result.saveGroupAvatar(applicationContext, name)
+        if (icon != null && icon != f.absolutePath) {
+            try {
+                File(icon).delete()
+            } catch (e: Exception) {
+            }
+        }
+        conversationDao.updateGroupIconUrl(groupId, f.absolutePath)
+        return Result.SUCCESS
     }
 
     private fun drawInternal(canvas: Canvas, bitmaps: List<Bitmap>) {
